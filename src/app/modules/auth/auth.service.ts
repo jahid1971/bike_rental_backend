@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { JwtPayload } from "jsonwebtoken";
+import { JwtPayload, sign } from "jsonwebtoken";
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { passwordHash } from "../../utls/passwordHash";
@@ -7,6 +7,30 @@ import { passwordHash } from "../../utls/passwordHash";
 import User from "../user/user.model";
 import { jwtToken } from "../../utls/jwtToken";
 import config from "../../config";
+import { IUser } from "../user/user.interface";
+
+
+
+
+// signUp......................signUp
+
+const signUp = async ( payload: IUser) => {
+    const user = await User.findOne({ email: payload.email });
+    if (user) throw new AppError(httpStatus.BAD_REQUEST, "user is already created with this email");
+  
+    const hashedPassword = await passwordHash.hashPassword(payload.password ?? '');
+
+    payload.password = hashedPassword;
+
+    const result = await User.create(payload);
+    const userObject = result.toObject();
+    delete userObject.password;
+    return userObject;
+};
+
+export const userServices = {
+    signUp
+}
 
 // logIn......................logIn
 
@@ -20,7 +44,7 @@ const logIn = async (payload: { email: string; password: string }) => {
     const plainPassword = payload.password;
     const hashedPassword = user.password;
 
-    const isPasswordMatched = await passwordHash.comparePassword(plainPassword, hashedPassword);
+    const isPasswordMatched = await passwordHash.comparePassword(plainPassword, hashedPassword as string);
 
     if (!isPasswordMatched) throw new AppError(404, "Invalid password");
 
@@ -28,7 +52,9 @@ const logIn = async (payload: { email: string; password: string }) => {
         id: user._id,
         role: user.role,
         email: user.email,
-        iat: Math.floor(Date.now() / 1000),
+        address: user.address,
+        phone: user.phone,
+    
     };
 
     const accessToken = jwtToken.createToken(
@@ -49,29 +75,8 @@ const logIn = async (payload: { email: string; password: string }) => {
     return { accessToken, refreshToken, userObject };
 };
 
-// changePassword......................changePassword
-const changePassword = async (id: string, payload: { oldPassword: string; newPassword: string }) => {
-    const user = await User.findById(id).select("+password");
-
-    if (!user) throw new AppError(404, "User not found");
-
-    const isPasswordMatched = await passwordHash.comparePassword(payload.oldPassword, user?.password);
-    if (!isPasswordMatched) throw new AppError(404, "Old Password Is Incorrect");
-
-    const isOldAdnNewPasswordSame = await passwordHash.comparePassword(payload.newPassword, user?.password);
-    if (isOldAdnNewPasswordSame) throw new AppError(404, "New password can't be same as old password");
-
-    const hashedPassword = await passwordHash.hashPassword(payload.newPassword);
-
-    const result = await User.findByIdAndUpdate(
-        id,
-        { password: hashedPassword, needsPasswordChange: false },
-        { new: true }
-    );
-    return result;
-};
 
 export const authServices = {
+    signUp,
     logIn,
-    changePassword,
 };

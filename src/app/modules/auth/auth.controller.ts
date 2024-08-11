@@ -4,7 +4,10 @@ import catchAsynch from "../../utls/catchAsynch";
 import sendSuccessResponse from "../../utls/sendSuccessResponse";
 import { authServices } from "./auth.service";
 
-
+const signUp = catchAsynch(async (req: Request, res: Response) => {
+    const result = await authServices.signUp(req.body);
+    return sendSuccessResponse(res, result, "SignUp successful", 201);
+});
 
 const logIn = catchAsynch(async (req: Request, res: Response) => {
     const { accessToken, refreshToken, userObject } = await authServices.logIn(req.body);
@@ -13,20 +16,17 @@ const logIn = catchAsynch(async (req: Request, res: Response) => {
         httpOnly: true,
         secure: true,
     });
-    const data = {
-        user: userObject,
+
+    res.status(200).json({
+        success: true,
+        statusCode: 200,
+        message: "User logged in successfully",
         token: accessToken,
-    };
-    sendSuccessResponse(res, data, "User logged in successfully", 200);
-});
-
-const changePassword = catchAsynch(async (req: Request, res: Response) => {
-    const result = await authServices.changePassword((req as any).user._id, req.body);
-
-    return sendSuccessResponse(res, result, "Password changed successfully", 200);
+        data: userObject, 
+    });
 });
 
 export const authControllers = {
+    signUp,
     logIn,
-    changePassword,
 };
