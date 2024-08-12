@@ -1,9 +1,10 @@
-import { Router } from 'express';
-import { userControllers } from './user.controller';
+import { Router } from "express";
+import { userControllers } from "./user.controller";
+import { userRole } from "../../constants/user";
+import checkAuth from "../../middleWares/checkAuth";
 
 const router = Router();
 
-router.post('/signup', userControllers.signUp);
+router.get("/me", checkAuth(userRole.ADMIN, userRole.USER), userControllers.getProfile);
 
-
-export default router;
+export const userRoutes = router;
