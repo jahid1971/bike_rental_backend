@@ -10,11 +10,11 @@ import config from "../config";
 import httpStatus from "http-status";
 import { TUserRole } from "../constants/user";
 
-
-
 const checkAuth = (...requiredRoles: Array<TUserRole>) => {
     return catchAsynch(async (req: Request, res: Response, next: NextFunction) => {
-        const token = req.headers.authorization;
+        const tokenWithBearer = req.headers.authorization;
+
+        const token = (tokenWithBearer as string).split(" ")[1];
 
         if (!token) {
             throw new AppError(401, "Unauthorized access");
@@ -22,7 +22,6 @@ const checkAuth = (...requiredRoles: Array<TUserRole>) => {
 
         const decodedToken = jwtToken.verifyToken(token, config.jwt_access_secret as string);
         const { id, role } = decodedToken;
-        
 
         // checking if the user is exist
         const user = await User.findById(id);

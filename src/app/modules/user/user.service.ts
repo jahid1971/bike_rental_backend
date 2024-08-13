@@ -11,7 +11,14 @@ const getProfile = async (userId: string) => {
     return user;
 }
 
+const updateProfile = async (userId: string, payload: any) => {
+    const user = await User.findByIdAndUpdate(userId, payload, { new: true });
+    if (!user) throw new AppError(httpStatus.NOT_FOUND, "Update failed");
+    return user;
+}
+
 export const userServices = {
-    getProfile
+    getProfile,
+    updateProfile
 
 }

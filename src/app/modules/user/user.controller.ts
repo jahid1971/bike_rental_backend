@@ -11,6 +11,12 @@ const getProfile =  catchAsynch(async (req: Request, res: Response) => {
     return sendSuccessResponse(res, result, "User profile retrieved successfully", 200);
 })
 
+const updateProfile =  catchAsynch(async (req: Request, res: Response) => {
+    const result = await userServices.updateProfile((req as  any).user._id, req.body);
+    return sendSuccessResponse(res, result, "User profile updated successfully", 200);
+})
+
 export const userControllers = {
-   getProfile
+   getProfile,
+    updateProfile
 }
