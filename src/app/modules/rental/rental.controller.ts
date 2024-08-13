@@ -9,6 +9,18 @@ const createRental = catchAsynch(async (req: any, res: Response) => {
     return sendSuccessResponse(res, result, "Rental created successfully", 201);
 });
 
+const returnBike = catchAsynch(async (req: any, res: Response) => {
+    const result = await rentalServices.returnBike(req.params.id);
+    return sendSuccessResponse(res, result, "Bike returned successfully");
+})
+
+const getMyRentals = catchAsynch(async (req: any, res: Response) => {
+    const result = await rentalServices.getMyRentals(req.user._id);
+    return sendSuccessResponse(res, result, "My rentals fetched successfully");
+})
+
 export const rentalController = {
     createRental,
+    returnBike,
+    getMyRentals
 };

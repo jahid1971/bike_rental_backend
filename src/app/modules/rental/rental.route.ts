@@ -13,5 +13,7 @@ router.post(
     validateRequest(rentalValidation.rentalSchema),
     rentalController.createRental
 );
+router.put("/:id/return", checkAuth(userRole.ADMIN), rentalController.returnBike);
+router.get("/", checkAuth(userRole.ADMIN, userRole.USER), rentalController.getMyRentals);
 
 export const rentalRoutes = router;

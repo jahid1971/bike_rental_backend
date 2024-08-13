@@ -41,12 +41,15 @@ const returnBike = async (rentalId: string) => {
     const rental = await Rental.findById(rentalId);
 
     if (!rental) throw new AppError(404, "Rental not found");
+    // console.log(rental, "rental");
 
     if (rental.isReturned) throw new AppError(400, "Bike is already returned");
 
     const session = await mongoose.startSession();
 
     try {
+        session.startTransaction();
+
         const bike = await Bike.findByIdAndUpdate(rental.bikeId, { isAvailable: true }, { new: true });
 
         if (!bike) throw new AppError(404, "Bike not found");
@@ -61,22 +64,26 @@ const returnBike = async (rentalId: string) => {
         // Saving the updated rental
         await rental.save({ session });
 
-   
         await session.commitTransaction();
         session.endSession();
 
         return rental;
-        
     } catch (err) {
         console.log(err, "error in returning bike");
         await session.abortTransaction();
         session.endSession();
         throw new AppError(500, (err as Error)?.message);
     }
-   
+};
+
+const getMyRentals = async (userId: string) => {
+    const myrentals = await Rental.find({ userId: userId })
+
+    return myrentals;
 };
 
 export const rentalServices = {
     createRental,
     returnBike,
+    getMyRentals,
 };
